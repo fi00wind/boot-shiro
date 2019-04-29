@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.coolwind.bootshiro.web.dao.UserDao" >
+  <resultMap id="UserMap" type="cn.coolwind.bootshiro.web.entity.User" >
+    <id column="id" property="id" jdbcType="INTEGER" />
+    <result column="username" property="username" jdbcType="VARCHAR" />
+    <result column="password" property="password" jdbcType="VARCHAR" />
+    <result column="nick_name" property="nickName" jdbcType="VARCHAR" />
+    <result column="salt" property="salt" jdbcType="VARCHAR" />
+    <result column="state" property="state" jdbcType="INTEGER" />
+  </resultMap>
+  <sql id="Base_Column_List" >
+    id, username, `password`, nick_name, salt, `state`
+  </sql>
+
+  <select id="getByUsername" resultMap="UserMap">
+    select
+    <include refid="Base_Column_List"/>
+    from sys_user
+    where username = #{username}
+  </select>
+</mapper>
