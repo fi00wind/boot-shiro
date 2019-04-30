@@ -1,26 +1,56 @@
 package cn.coolwind.bootshiro.core.config.shiro;
 
+import cn.coolwind.bootshiro.web.dao.UserDao;
+import cn.coolwind.bootshiro.web.entity.Permission;
 import org.apache.shiro.authc.credential.HashedCredentialsMatcher;
 import org.apache.shiro.mgt.SecurityManager;
 import org.apache.shiro.spring.web.ShiroFilterFactoryBean;
 import org.apache.shiro.web.mgt.DefaultWebSecurityManager;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import javax.servlet.Filter;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 @Configuration
 public class ShiroConfig {
+    @Autowired
+    private ShiroService shiroService;
+
+    @Autowired
+    private UserDao userDao;
+    /**
+     * 授权、认证
+     * @return
+     */
     @Bean
     public MyRealm myRealm() {
         MyRealm myRealm = new MyRealm();
-        HashedCredentialsMatcher matcher = new HashedCredentialsMatcher("MD5");
-        matcher.setHashIterations(2);
-        myRealm.setCredentialsMatcher(matcher);
+        myRealm.setCredentialsMatcher(hashedCredentialsMatcher());
         return myRealm;
     }
 
+    /**
+     * 加密算法，MD5散列2次
+     * @return
+     */
+    @Bean
+    public HashedCredentialsMatcher hashedCredentialsMatcher() {
+        HashedCredentialsMatcher hashedCredentialsMatcher = new HashedCredentialsMatcher();
+        hashedCredentialsMatcher.setHashAlgorithmName("md5");//散列算法:这里使用MD5算法;
+        hashedCredentialsMatcher.setHashIterations(2);//散列的次数，比如散列两次，相当于 md5(md5(""));
+        return hashedCredentialsMatcher;
+    }
+
+    /**
+     * 安全管理器
+     * @param myRealm
+     * @return
+     */
     @Bean
     public SecurityManager securityManager(MyRealm myRealm){
         DefaultWebSecurityManager securityManager =  new DefaultWebSecurityManager();
@@ -29,21 +59,18 @@ public class ShiroConfig {
     }
 
 
-
+    /**
+     * shiroFilter
+     * @param securityManager
+     * @return
+     */
     @Bean
-    public ShiroFilterFactoryBean shirFilter(SecurityManager securityManager) {
+    public ShiroFilterFactoryBean shiroFilter(SecurityManager securityManager) {
         System.out.println("ShiroConfiguration.shirFilter()");
         ShiroFilterFactoryBean shiroFilterFactoryBean = new ShiroFilterFactoryBean();
         shiroFilterFactoryBean.setSecurityManager(securityManager);
-        //拦截器.
-        Map<String,String> filterChainDefinitionMap = new LinkedHashMap<String,String>();
-        // 配置不会被拦截的链接 顺序判断
-        //配置退出 过滤器,其中的具体的退出代码Shiro已经替我们实现了
-        filterChainDefinitionMap.put("/logout", "logout");
-        filterChainDefinitionMap.put("/login", "anon");
-        //<!-- 过滤链定义，从上向下顺序执行，一般将/**放在最为下边 -->:这是一个坑呢，一不小心代码就不好使了;
-        //<!-- authc:所有url都必须认证通过才可以访问; anon:所有url都都可以匿名访问-->
-        filterChainDefinitionMap.put("/**", "authc");
+        Map<String, Filter> filters = new HashMap<>();
+        shiroFilterFactoryBean.setFilters(filters);
         // 如果不设置默认会自动寻找Web工程根目录下的"/login.jsp"页面
         shiroFilterFactoryBean.setLoginUrl("/login.html");
         // 登录成功后要跳转的链接
@@ -51,7 +78,7 @@ public class ShiroConfig {
 
         //未授权界面;
         shiroFilterFactoryBean.setUnauthorizedUrl("/403");
-        shiroFilterFactoryBean.setFilterChainDefinitionMap(filterChainDefinitionMap);
+        shiroFilterFactoryBean.setFilterChainDefinitionMap(shiroService.initFilterChain());
         return shiroFilterFactoryBean;
     }
 }

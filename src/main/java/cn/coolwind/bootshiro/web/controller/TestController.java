@@ -1,7 +1,6 @@
 package cn.coolwind.bootshiro.web.controller;
 
 import cn.coolwind.bootshiro.web.service.TestService;
-import org.apache.shiro.authc.SimpleAuthenticationInfo;
 import org.apache.shiro.crypto.hash.SimpleHash;
 import org.apache.shiro.util.ByteSource;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,5 +17,15 @@ public class TestController {
         String[] p = param.split(",");
         SimpleHash hash = new SimpleHash("MD5",p[1],ByteSource.Util.bytes(p[0]),2);
         return hash.toString();
+    }
+
+    @GetMapping("coolwind")
+    public Object coolwind() {
+        return "this is coolwind page";
+    }
+
+    @GetMapping("aaa")
+    public Object aaa() {
+        return "this is aaa page";
     }
 }
